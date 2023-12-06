@@ -25,6 +25,7 @@
 #include "Common/MsgHandler.h"
 #include "Common/StringUtil.h"
 
+#include "Core/AchievementManager.h"
 #include "Core/Boot/DolReader.h"
 #include "Core/Boot/ElfReader.h"
 #include "Core/CommonTitles.h"
@@ -460,6 +461,9 @@ bool CBoot::Load_BS2(Core::System& system, const std::string& boot_rom_filename)
   SetupBAT(system, /*is_wii*/ false);
 
   ppc_state.pc = 0x81200150;
+
+  PowerPC::MSRUpdated(ppc_state);
+
   return true;
 }
 
@@ -554,6 +558,11 @@ bool CBoot::BootUp(Core::System& system, const Core::CPUThreadGuard& guard,
       {
         SetupGCMemory(system, guard);
       }
+
+#ifdef USE_RETRO_ACHIEVEMENTS
+      AchievementManager::GetInstance()->HashGame(executable.path,
+                                                  [](AchievementManager::ResponseType r_type) {});
+#endif  // USE_RETRO_ACHIEVEMENTS
 
       if (!executable.reader->LoadIntoMemory(system))
       {
